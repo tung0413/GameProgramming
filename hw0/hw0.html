@@ -148,7 +148,7 @@ function initTrain() {
   tire4.rotation.z = Math.PI / 2;
 
   train.add(trainbody, chimney, tire1, tire2, tire3, tire4);
-  train.position.set(x, 8, z);
+  train.position.set(x, 9, z);
   train.rotation.y = -Math.PI / 2
   scene.add(train);
 }
@@ -159,7 +159,7 @@ function animate() {
   let time = clock.getDelta();
   if (run) {
     angle -= Math.PI / 15 * time;
-    train.position.set(r * Math.cos(angle), 8, r * Math.sin(angle));
+    train.position.set(r * Math.cos(angle), 9, r * Math.sin(angle));
     train.rotation.y = -angle;
   }
 
