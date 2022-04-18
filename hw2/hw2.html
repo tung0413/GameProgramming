@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+
+body {
+  overflow: hidden;
+}
+</style>
+</head>
+
+<body> 
+<div id="info">Character Animation
+  <br>
+  <button id='toggle'>Switch View</button>
+</div>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+var camera, scene, renderer, clock = new THREE.Clock();
+
+var model, head, body, rHand, Lhand, rLeg, lLeg;
+
+var isSwitch = false;
+
+$('#toggle').click(function() {
+  isSwitch = !isSwitch;
+  
+  if(!isSwitch){
+				camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.z = 300;
+  camera.position.y = 200;
+  let controls = new THREE.OrbitControls(camera, renderer.domElement);
+			}else{
+      camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+      }
+});
+
+var keys = [
+  [0, [Math.PI / 6, -Math.PI / 6]],
+  [0.5, [-Math.PI / 6, Math.PI / 6]],
+  [1, [Math.PI / 6, -Math.PI / 6]]
+];
+
+var Ts = clock.getElapsedTime(),
+  T = 1;
+
+var size = 4,
+  xHead = 2 * size,
+  yHead = 2 * size,
+  zHead = 2 * size,
+  xBody = 2 * size,
+  yBody = 3 * size,
+  zBody = 1 * size,
+  xHand = 1 * size,
+  yHand = 3 * size,
+  zHand = 1 * size;
+
+var r = 30,
+  R = 60,
+  angle = 0;
+
+var U = 14 * size,
+  V = 8 * size;
+
+var vertices = [{
+    x: -0.5,
+    y: 0.5,
+    z: 0.5
+  }, //-++
+  {
+    x: 0.5,
+    y: 0.5,
+    z: 0.5
+  }, //+++
+  {
+    x: 0.5,
+    y: -0.5,
+    z: 0.5
+  }, //+-+
+  {
+    x: -0.5,
+    y: -0.5,
+    z: 0.5
+  }, //--+
+  {
+    x: -0.5,
+    y: 0.5,
+    z: -0.5
+  }, //-+-
+  {
+    x: 0.5,
+    y: 0.5,
+    z: -0.5
+  }, //++-
+  {
+    x: 0.5,
+    y: -0.5,
+    z: -0.5
+  }, //+--
+  {
+    x: -0.5,
+    y: -0.5,
+    z: -0.5
+  } //---
+];
+
+var allVert = [
+  [0, 3, 2, 1],
+  [1, 2, 6, 5],
+  [4, 7, 3, 0],
+  [5, 6, 7, 4],
+  [4, 0, 1, 5],
+  [3, 7, 6, 2]
+];
+
+var commonFace = [
+  ['e', 'j', 'k', 'f'],
+  ['f', 'k', 'l', 'g'],
+  ['d', 'i', 'j', 'e'],
+  ['g', 'l', 'm', 'h'],
+  ['a', 'e', 'f', 'b'],
+  ['f', 'b', 'c', 'g']
+];
+
+var bodyFace = [
+  ['e', 'j', 'k', 'f'],
+  ['f', 'k', 'l', 'g'],
+  ['d', 'i', 'j', 'e'],
+  ['g', 'l', 'm', 'h'],
+  ['a', 'e', 'f', 'b'],
+  ['b', 'f', 'x', 'c']
+];
+
+var headUvs = {
+  a: {
+    u: 2 * size,
+    v: 8 * size
+  },
+  b: {
+    u: 4 * size,
+    v: 8 * size
+  },
+  c: {
+    u: 6 * size,
+    v: 8 * size
+  },
+  d: {
+    u: 0 * size,
+    v: 6 * size
+  },
+  e: {
+    u: 2 * size,
+    v: 6 * size
+  },
+  f: {
+    u: 4 * size,
+    v: 6 * size
+  },
+  g: {
+    u: 6 * size,
+    v: 6 * size
+  },
+  h: {
+    u: 8 * size,
+    v: 6 * size
+  },
+  i: {
+    u: 0 * size,
+    v: 4 * size
+  },
+  j: {
+    u: 2 * size,
+    v: 4 * size
+  },
+  k: {
+    u: 4 * size,
+    v: 4 * size
+  },
+  l: {
+    u: 6 * size,
+    v: 4 * size
+  },
+  m: {
+    u: 8 * size,
+    v: 4 * size
+  },
+}
+
+var handUvs = {
+  a: {
+    u: 1 * size,
+    v: 4 * size
+  },
+  b: {
+    u: 2 * size,
+    v: 4 * size
+  },
+  c: {
+    u: 3 * size,
+    v: 4 * size
+  },
+  d: {
+    u: 0 * size,
+    v: 3 * size
+  },
+  e: {
+    u: 1 * size,
+    v: 3 * size
+  },
+  f: {
+    u: 2 * size,
+    v: 3 * size
+  },
+  g: {
+    u: 3 * size,
+    v: 3 * size
+  },
+  h: {
+    u: 4 * size,
+    v: 3 * size
+  },
+  i: {
+    u: 0 * size,
+    v: 0 * size
+  },
+  j: {
+    u: 1 * size,
+    v: 0 * size
+  },
+  k: {
+    u: 2 * size,
+    v: 0 * size
+  },
+  l: {
+    u: 3 * size,
+    v: 0 * size
+  },
+  m: {
+    u: 4 * size,
+    v: 0 * size
+  },
+}
+
+var bodyUvs = {
+  a: {
+    u: 5 * size,
+    v: 4 * size
+  },
+  b: {
+    u: 7 * size,
+    v: 4 * size
+  },
+  c: {
+    u: 9 * size,
+    v: 4 * size
+  },
+  d: {
+    u: 4 * size,
+    v: 3 * size
+  },
+  e: {
+    u: 5 * size,
+    v: 3 * size
+  },
+  f: {
+    u: 7 * size,
+    v: 3 * size
+  },
+  g: {
+    u: 8 * size,
+    v: 3 * size
+  },
+  x: {
+    u: 9 * size,
+    v: 3 * size
+  },
+  h: {
+    u: 10 * size,
+    v: 3 * size
+  },
+  i: {
+    u: 4 * size,
+    v: 0 * size
+  },
+  j: {
+    u: 5 * size,
+    v: 0 * size
+  },
+  k: {
+    u: 7 * size,
+    v: 0 * size
+  },
+  l: {
+    u: 8 * size,
+    v: 0 * size
+  },
+  m: {
+    u: 10 * size,
+    v: 0 * size
+  },
+}
+
+init();
+animate();
+
+function init() {
+  scene = new THREE.Scene();
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+  document.body.appendChild(renderer.domElement);
+
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.z = 300;
+  camera.position.y = 200;
+  let controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+  var gridXZ = new THREE.GridHelper(300, 20, 'yellow', 'white');
+  scene.add(gridXZ);
+
+  ////////////////////////////////////////////////////////////////
+  initModel();
+}
+
+function keyframe(t) {
+  var s = ((t - Ts) % T) / T;
+
+	for(var i=1;i<keys.length;i++){
+  	if(keys[i][0]>s)break;
+  }
+  
+  var a = (s-keys[i-1][0])/(keys[i][0]-keys[i-1][0]);
+  
+  var value = [(1-a)*keys[i-1][1][0]+a*keys[i][1][0], (1-a)*keys[i-1][1][1]+a*keys[i][1][1]];
+  
+  return value;
+}
+
+function initModel() {
+  head = buildHead();
+  body = buildBody();
+  rHand = buildHandLeg('hand');
+  lHand = buildHandLeg('hand');
+  rLeg = buildHandLeg('leg');
+  lLeg = buildHandLeg('leg');
+
+  model = new THREE.Group();
+  model.add(head);
+  head.position.y = 3 * size / 2 + 2 * size / 2;
+  model.add(body);
+  model.add(rHand);
+  rHand.position.x = 2 * size / 2 + size / 2;
+  rHand.position.y = size*3/2;
+  model.add(lHand);
+  lHand.position.x = -2 * size / 2 - size / 2;
+  lHand.position.y = size*3/2;
+  model.add(rLeg);
+  rLeg.position.x = size / 2;
+  rLeg.position.y =  - 3 * size / 2;
+  model.add(lLeg);
+  lLeg.position.x = -size / 2;
+  lLeg.position.y =  - 3 * size / 2;
+
+  model.position.y = 3 * size / 2 + 3 * size;
+  model.position.x = r;
+  scene.add(model);
+
+  window.addEventListener('resize', onWindowResize, false);
+}
+
+function buildHead() {
+  var vert = [];
+  var uvs = [];
+  var indices = [];
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 4; j++) {
+      vert.push(vertices[allVert[i][j]].x * xHead, vertices[allVert[i][j]].y * yHead, vertices[allVert[i][j]].z * zHead);
+      //console.log(vert);
+
+      uvs.push(headUvs[commonFace[i][j]].u / U, headUvs[commonFace[i][j]].v / V);
+      //console.log(uvs);
+    }
+    indices.push(0 + i * 4, 1 + i * 4, 2 + i * 4, 0 + i * 4, 2 + i * 4, 3 + i * 4);
+    //console.log(indices);
+  }
+
+  var geometry = new THREE.BufferGeometry();
+  geometry.setIndex(indices);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vert, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+
+  geometry.computeVertexNormals();
+  let head = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial({
+    side: THREE.DoubleSide
+  }));
+  return head;
+}
+
+function buildBody() {
+  var vert = [];
+  var uvs = [];
+  var indices = [];
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 4; j++) {
+      vert.push(vertices[allVert[i][j]].x * xBody, vertices[allVert[i][j]].y * yBody, vertices[allVert[i][j]].z * zBody);
+      //console.log(vert);
+
+      uvs.push(bodyUvs[bodyFace[i][j]].u / U, bodyUvs[bodyFace[i][j]].v / V);
+      //console.log(uvs);
+    }
+    indices.push(0 + i * 4, 1 + i * 4, 2 + i * 4, 0 + i * 4, 2 + i * 4, 3 + i * 4);
+    //console.log(indices);
+  }
+
+  var geometry = new THREE.BufferGeometry();
+  geometry.setIndex(indices);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vert, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+
+  geometry.computeVertexNormals();
+  let body = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial({
+    side: THREE.DoubleSide
+  }));
+  return body;
+}
+
+function buildHandLeg(type) {
+  var vert = [];
+  var uvs = [];
+  var indices = [];
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 4; j++) {
+      vert.push(vertices[allVert[i][j]].x * xHand, vertices[allVert[i][j]].y * yHand, vertices[allVert[i][j]].z * zHand);
+      //console.log(vert);
+
+      uvs.push(handUvs[commonFace[i][j]].u / U, handUvs[commonFace[i][j]].v / V);
+      //console.log(uvs);
+    }
+    indices.push(0 + i * 4, 1 + i * 4, 2 + i * 4, 0 + i * 4, 2 + i * 4, 3 + i * 4);
+    //console.log(indices);
+  }
+
+  var geometry = new THREE.BufferGeometry();
+  geometry.setIndex(indices);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vert, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+
+  geometry.computeVertexNormals();
+  let handLeg = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial({
+    side: THREE.DoubleSide
+  }));
+  let group = new THREE.Group();
+  group.add(handLeg);
+  if(type=='hand'){
+  handLeg.position.y = -size*3/2;
+  }else if(type == 'leg'){
+  handLeg.position.y = -size*3/2;
+  }
+  return group;
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  render();
+
+  let dt = clock.getDelta();
+  // console.log(angle);
+  if (angle > -Math.PI) {
+    angle -= Math.PI / 4 * dt;
+    model.position.set(r + r * Math.cos(angle), 3 * size / 2 + 3 * size, r * Math.sin(angle));
+    model.rotation.y = -angle;
+  } else if (angle < -Math.PI && angle > -Math.PI * 3) {
+    angle -= Math.PI / 6 * dt;
+    model.position.set(-R - R * Math.cos(angle), 3 * size / 2 + 3 * size, R * Math.sin(angle));
+    model.rotation.y = angle;
+  } else if (angle < -Math.PI * 4) {
+    angle = 0;
+  } else {
+    angle -= Math.PI / 4 * dt;
+    model.position.set(r + r * Math.cos(angle), 3 * size / 2 + 3 * size, r * Math.sin(angle));
+    model.rotation.y = -angle;
+  }
+  
+  if(isSwitch){
+  let cameraPos = new THREE.Vector3(0,8*size, 14*size);
+  head.localToWorld(cameraPos);
+  camera.position.copy(cameraPos);
+  
+  let cameraLookAt = new THREE.Vector3(0, 2*size, 0);
+  head.localToWorld(cameraLookAt);
+  camera.lookAt(cameraLookAt);
+  
+  }
+  
+  let motion = keyframe(clock.getElapsedTime());
+  lLeg.rotation.x = motion[0];
+  rLeg.rotation.x = motion[1];
+  rHand.rotation.x = motion[0];
+  lHand.rotation.x = motion [1];
+}
+
+function render() {
+  renderer.render(scene, camera);
+}
+
+
+</script>
+</body>
+
+</html>
