@@ -71,7 +71,7 @@
     	mtlLoader.load(modelName+'.mtl', function(materials) {
     		materials.preload();
 
-    		var objLoader =  new OBJLoader();
+    		var objLoader =  new THREE.OBJLoader();
     		objLoader.setMaterials(materials);
     		objLoader.setPath('model/');
     		objLoader.load(modelName+'.obj', function(object) {
