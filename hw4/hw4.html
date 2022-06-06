@@ -63,7 +63,7 @@
           bus.add(theObject);
           bus.position.y = 10;
 
-          
+          scene.add(bus);
 
         }, onProgress, onError);
 
@@ -175,7 +175,6 @@
     var power, angle;
 
     init();
-    readModel('bus1');
     animate();
 
     // function agentMesh() {
@@ -308,7 +307,7 @@
 
       if (modelCreate === false) {
         modelCreate = true;
-        scene.add(bus);
+        readModel('bus1');
       }
 
       // find intersections
